@@ -5,6 +5,7 @@ from mongoengine import *
 
 connect('scrapper', host='mongodb://localhost/scrapper')
 
+
 class Match(Document):
     team_home = StringField(max_length=128, required=True)
     team_away = StringField(max_length=128, required=True)
