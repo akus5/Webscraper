@@ -46,6 +46,7 @@ def get_data(page_source):
     data_list = []
     data_list.append(page_source.h1.string)
     data_list.append(page_source.select("p[class^=date]"))
+    # TIP można użyć tupli: samo return (page_source.h1.string, page_source.select("p[class^=date]"))
     return data_list
 
 
