@@ -4,6 +4,7 @@ from selenium import webdriver
 import time
 from random import randint
 
+urls = []
 
 class WebScraper:
 
@@ -35,20 +36,33 @@ def get_href(page_source):
 
 def get_href2(page_source):
     list2 = []
-    print(page_source.tbody)
     for link in page_source.tbody.find_all("a"):
         if str(link.get('href')).startswith('/soccer/'):
             list2.append('http://www.oddsportal.com' + link.get('href'))
     return list2[3:]
 
+
+def get_data(page_source):
+    data_list = []
+    data_list.append(page_source.h1.string)
+    data_list.append(page_source.select("p[class^=date]"))
+    return data_list
+
+
+def get_url():
+    with WebScraper() as scraper:
+        links = get_href(scraper.get_source_code('http://www.oddsportal.com/events/'))
+        for x in links:
+            try:
+                urls.append(get_href2(scraper.get_source_code(x)))
+            except:
+                time.sleep(randint(0, 9))
+    return urls
+
 with WebScraper() as scraper:
-    links = get_href(scraper.get_source_code('http://www.oddsportal.com/events/'))
-    print(links)
-    for x in links:
-        try:
-            print(get_href2(scraper.get_source_code(x)))
-        except:
-            time.sleep(randint(0, 9))
+    for link in get_url():
+        print(get_data(scraper.get_source_code(link)))
+
 
 
 '''
