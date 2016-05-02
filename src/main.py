@@ -1,6 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 from selenium import webdriver
+import time
+from random import randint
 
 
 class WebScraper:
@@ -23,9 +25,31 @@ class WebScraper:
         return self.driver.page_source
 
 
+def get_href(page_source):
+    list1 = []
+    for link in page_source.find_all("a", {"foo": "f"}):
+        if str(link.get('href')).startswith('/soccer/'):
+            list1.append('http://www.oddsportal.com' + link.get('href'))
+    return list1
+
+
+def get_href2(page_source):
+    list2 = []
+    print(page_source.tbody)
+    for link in page_source.tbody.find_all("a"):
+        if str(link.get('href')).startswith('/soccer/'):
+            list2.append('http://www.oddsportal.com' + link.get('href'))
+    return list2[3:]
+
 with WebScraper() as scraper:
-    print(len(scraper.get_source_code('http://www.oddsportal.com/matches/soccer/20160420/').text))
-    print(len(scraper.get_source_code('http://www.oddsportal.com/matches/soccer/20160421/').text))
+    links = get_href(scraper.get_source_code('http://www.oddsportal.com/events/'))
+    print(links)
+    for x in links:
+        try:
+            print(get_href2(scraper.get_source_code(x)))
+        except:
+            time.sleep(randint(0, 9))
+
 
 '''
 def request(link):
@@ -34,18 +58,6 @@ def request(link):
     return BeautifulSoup(data, 'html.parser')
 
 
-def get_href(soup):
-    list = []
-    for link in soup.find_all('a'):
-        if str(link.get('href')).startswith('/soccer/'):   #dałam tylko dla pilki noznej na razie
-            list.append(link.get('href'))
-    return list
-
-soup = request("http://www.oddsportal.com/events/")
-# print(get_href(soup))
-
-# for x in get_href(soup):
-    # print(request("http://www.oddsportal.com"+x))
 '''
 
 
