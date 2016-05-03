@@ -15,9 +15,9 @@ class Bet1X2(EmbeddedDocument):
 
 
 class OneXTwo(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(Bet1X2))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(Bet1X2))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(Bet1X2))
+    full_time = ListField(EmbeddedDocumentField(Bet1X2))
+    first_half = ListField(EmbeddedDocumentField(Bet1X2))
+    secound_half = ListField(EmbeddedDocumentField(Bet1X2))
 
 
 class BetAH(EmbeddedDocument):
@@ -28,9 +28,9 @@ class BetAH(EmbeddedDocument):
 
 
 class AsianHandicap(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetAH))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetAH))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetAH))
+    full_time = ListField(EmbeddedDocumentField(BetAH))
+    first_half = ListField(EmbeddedDocumentField(BetAH))
+    secound_half = ListField(EmbeddedDocumentField(BetAH))
 
 
 class BetOU(EmbeddedDocument):
@@ -41,9 +41,9 @@ class BetOU(EmbeddedDocument):
 
 
 class OverUnder(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetOU))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetOU))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetOU))
+    full_time = ListField(EmbeddedDocumentField(BetOU))
+    first_half = ListField(EmbeddedDocumentField(BetOU))
+    secound_half = ListField(EmbeddedDocumentField(BetOU))
 
 
 class BetDNB(EmbeddedDocument):
@@ -54,9 +54,9 @@ class BetDNB(EmbeddedDocument):
 
 
 class DrawNoBet(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetDNB))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetDNB))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetDNB))
+    full_time = ListField(EmbeddedDocumentField(BetDNB))
+    first_half = ListField(EmbeddedDocumentField(BetDNB))
+    secound_half = ListField(EmbeddedDocumentField(BetDNB))
 
 
 class BetEH(EmbeddedDocument):
@@ -68,9 +68,9 @@ class BetEH(EmbeddedDocument):
 
 
 class EuropeanHandicap(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetEH))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetEH))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetEH))
+    full_time = ListField(EmbeddedDocumentField(BetEH))
+    first_half = ListField(EmbeddedDocumentField(BetEH))
+    secound_half = ListField(EmbeddedDocumentField(BetEH))
 
 
 class BetDC(EmbeddedDocument):
@@ -82,9 +82,9 @@ class BetDC(EmbeddedDocument):
 
 
 class DoubleChance(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetDC))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetDC))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetDC))
+    full_time = ListField(EmbeddedDocumentField(BetDC))
+    first_half = ListField(EmbeddedDocumentField(BetDC))
+    secound_half = ListField(EmbeddedDocumentField(BetDC))
 
 
 class BetCS(EmbeddedDocument):
@@ -93,30 +93,69 @@ class BetCS(EmbeddedDocument):
 
 
 class CorrectScore(EmbeddedDocument):
-    full_time = EmbeddedDocumentListField(EmbeddedDocumentField(BetCS))
-    first_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetCS))
-    secound_half = EmbeddedDocumentListField(EmbeddedDocumentField(BetCS))
+    full_time = ListField(EmbeddedDocumentField(BetCS))
+    first_half = ListField(EmbeddedDocumentField(BetCS))
+    secound_half = ListField(EmbeddedDocumentField(BetCS))
 
 
 class Bets(EmbeddedDocument):
-    one_x_two = EmbeddedDocumentListField(EmbeddedDocumentField(OneXTwo))
-    asian_handicap = EmbeddedDocumentListField(EmbeddedDocumentField(AsianHandicap))
-    over_under = EmbeddedDocumentListField(EmbeddedDocumentField(OverUnder))
-    draw_no_bet = EmbeddedDocumentListField(EmbeddedDocumentField(DrawNoBet))
-    european_handicap = EmbeddedDocumentListField(EmbeddedDocumentField(EuropeanHandicap))
-    double_chance = EmbeddedDocumentListField(EmbeddedDocumentField(DoubleChance))
-    correct_score = EmbeddedDocumentListField(EmbeddedDocumentField(CorrectScore))
+    one_x_two = ListField(EmbeddedDocumentField(OneXTwo))
+    asian_handicap = ListField(EmbeddedDocumentField(AsianHandicap))
+    over_under = ListField(EmbeddedDocumentField(OverUnder))
+    draw_no_bet = ListField(EmbeddedDocumentField(DrawNoBet))
+    european_handicap = ListField(EmbeddedDocumentField(EuropeanHandicap))
+    double_chance = ListField(EmbeddedDocumentField(DoubleChance))
+    correct_score = ListField(EmbeddedDocumentField(CorrectScore))
     bets_date = DateTimeField(default=datetime.datetime.now())
 
 
-class Match(Document):
+class BaseMatch(Document):
     title = StringField(max_length=258, required=True)
     team_home = StringField(max_length=128, required=True)
     team_away = StringField(max_length=128, required=True)
     league = StringField(max_length=128, required=False)
     country = StringField(max_length=128, required=True)
     match_date = DateTimeField(required=True)
-    bets = EmbeddedDocumentListField(EmbeddedDocumentField(Bets))
+    bets = EmbeddedDocumentListField(Bets)
 
     link = URLField()
     create_date = DateTimeField(default=datetime.datetime.now())
+
+    meta = {
+        'abstract': True,
+    }
+
+
+class FinishedMatch(BaseMatch):
+    score = StringField(max_length=5, required=True)
+
+    def __init__(self, match, score):
+        super().__init__()
+        self.title = match.title
+        self.team_away = match.team_away
+        self.team_home = match.team_home
+        self.league = match.league
+        self.country = match.country
+        self.match_date = match.match_date
+        self.bets = match.bets
+        self.link = match.link
+        self.score = score
+
+    meta = {'collection': 'finished_match'}
+
+
+class Match(BaseMatch):
+    meta = {'collection': 'match'}
+
+
+# obj = Match(match_date=datetime.datetime.now(), team_home='Druzyna3', title='Druzyna3 vs Druzyna4', country='Russia', team_away='Druzyna4')
+# b = Bet1X2(bookmaker='Test', _1=2.5, _X=2.5, _2=2.6, payout=96.56)
+# o = OneXTwo()
+# o.full_time.append(b)
+# bet = Bets()
+# bet.one_x_two.append(o)
+#
+# obj.bets.append(bet)
+# # obj.save()
+# t = FinishedMatch(obj, '2:5')
+# t.save()
