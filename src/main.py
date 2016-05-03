@@ -6,6 +6,7 @@ from random import randint
 
 urls = []
 
+
 class WebScraper:
 
     def __init__(self):
@@ -28,40 +29,32 @@ class WebScraper:
 
 def get_href(page_source):
     list1 = []
-    for link in page_source.find_all("a", {"foo": "f"}):
-        if str(link.get('href')).startswith('/soccer/'):
-            list1.append('http://www.oddsportal.com' + link.get('href'))
+    for url in page_source.find_all("a", {"foo": "f"}):
+        if str(url.get('href')).startswith('/soccer/'):
+            list1.append('http://www.oddsportal.com' + url.get('href'))
     return list1
 
 
 def get_href2(page_source):
     list2 = []
-    for link in page_source.tbody.find_all("a"):
-        if str(link.get('href')).startswith('/soccer/'):
-            list2.append('http://www.oddsportal.com' + link.get('href'))
+    for url in page_source.tbody.find_all("a"):
+        if str(url.get('href')).startswith('/soccer/'):
+            list2.append('http://www.oddsportal.com' + url.get('href'))
     return list2[3:]
 
 
 def get_data(page_source):
-    data_list = []
-    data_list.append(page_source.h1.string)
-    data_list.append(page_source.select("p[class^=date]"))
-    # TIP można użyć tupli: samo return (page_source.h1.string, page_source.select("p[class^=date]"))
-    return data_list
+    return page_source.h1.string, page_source.select("p[class^=date]")
 
-
-def get_url():
-    with WebScraper() as scraper:
-        links = get_href(scraper.get_source_code('http://www.oddsportal.com/events/'))
-        for x in links:
-            try:
-                urls.append(get_href2(scraper.get_source_code(x)))
-            except:
-                time.sleep(randint(0, 9))
-    return urls
 
 with WebScraper() as scraper:
-    for link in get_url():
+    links = get_href(scraper.get_source_code('http://www.oddsportal.com/events/'))
+    for x in links:
+        try:
+            urls.append(get_href2(scraper.get_source_code(x)))
+        except:
+            time.sleep(randint(0, 9))
+    for link in urls:
         print(get_data(scraper.get_source_code(link)))
 
 
