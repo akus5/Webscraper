@@ -7,7 +7,7 @@ import re
 import itertools
 
 urls = []
-
+bet_1x2 = {'full_time': '#1X2;2', 'first_half': '#1X2;3', 'second_half': '#1X2;4'}
 
 class WebScraper:
 
@@ -52,7 +52,7 @@ def get_data1x2(page_source):
             name, value = bet.get_text().rsplit(None, 1)
         except:
             break
-        lst1[name] = re.findall('....', value)
+        lst1[name[1:]] = re.findall('....', value)
     return page_source.h1.string, page_source.select("p[class^=date]")[0].string, lst1
 
 
@@ -61,12 +61,14 @@ with WebScraper() as scraper:
 
     for x in links:
         try:
-            urls.append(get_href2(scraper.get_source_code(x)))
+            ln = get_href2(scraper.get_source_code(x))
+            urls.append(ln)
+            print("Pobrano linki z :" + x)
         except:
             time.sleep(randint(0, 9))
 
     for link in list(itertools.chain.from_iterable(urls)):
-            print(get_data1x2(scraper.get_source_code(link)))
+        print(get_data1x2(scraper.get_source_code(link)))
 
 
 
