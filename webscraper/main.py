@@ -62,14 +62,23 @@ with WebScraper() as scraper:
     for x in links:
         try:
             ln = get_href2(scraper.get_source_code(x))
-            urls.append(ln)
+            # urls.append(ln)
             print("Pobrano linki z :" + x)
         except:
             time.sleep(randint(0, 9))
+        for link in ln:
+            try:
+                print(get_data1x2(scraper.get_source_code(link)))
+            except:
+                time.sleep(randint(0, 9))
 
+    '''
     for link in list(itertools.chain.from_iterable(urls)):
-        print(get_data1x2(scraper.get_source_code(link)))
-
+        try:
+            print(get_data1x2(scraper.get_source_code(link)))
+        except:
+            time.sleep(randint(0, 9))
+    '''
 
 
 
