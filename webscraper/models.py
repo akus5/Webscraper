@@ -129,8 +129,7 @@ class BaseMatch(Document):
 class FinishedMatch(BaseMatch):
     score = StringField(max_length=5, required=True)
 
-    def __init__(self, match, score):
-        super().__init__()
+    def create_from_match(self, match, score):
         self.title = match.title
         self.team_away = match.team_away
         self.team_home = match.team_home
@@ -140,6 +139,7 @@ class FinishedMatch(BaseMatch):
         self.bets = match.bets
         self.link = match.link
         self.score = score
+        return self
 
     meta = {'collection': 'finished_match'}
 
@@ -148,7 +148,9 @@ class Match(BaseMatch):
     meta = {'collection': 'match'}
 
 
-# obj = Match(match_date=datetime.datetime.now(), team_home='Druzyna3', title='Druzyna3 vs Druzyna4', country='Russia', team_away='Druzyna4')
+# o = FinishedMatch.objects.get(country='Poland', team_home='Test')
+# print(o.title)
+# obj = Match(match_date=datetime.datetime.now() + datetime.timedelta(hours=4), team_home='Test', title='Druzyna3 vs Druzyna4', country='Poland', team_away='Druzyna4')
 # b = Bet1X2(bookmaker='Test', _1=2.5, _X=2.5, _2=2.6, payout=96.56)
 # o = OneXTwo()
 # o.full_time.append(b)
@@ -156,6 +158,6 @@ class Match(BaseMatch):
 # bet.one_x_two.append(o)
 #
 # obj.bets.append(bet)
-# # obj.save()
-# t = FinishedMatch(obj, '2:5')
+# obj.save()
+# t = FinishedMatch().create_from_match(obj, '2:5')
 # t.save()
