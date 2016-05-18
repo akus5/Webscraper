@@ -57,7 +57,7 @@ class TodayWorker(Worker):
     class TodayDataProvider(DataProvider):
 
         def update(self):
-            self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -78,7 +78,7 @@ class CurrentWorker(Worker):
     class CurrentDataProvider(DataProvider):
 
         def update(self):
-            self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -99,7 +99,7 @@ class WeekWorker(Worker):
     class WeekDataProvider(DataProvider):
 
         def update(self):
-            self.model.objects(match_date__gte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(match_date__gte=dt.now() + timedelta(days=1))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -115,7 +115,30 @@ class WeekWorker(Worker):
             sleep(self.worker_delay)
 
 
-class SearchWorker(Worker):
+class EndedWorker(Worker):
+
+    class EndedDataProvider(DataProvider):
+
+        def update(self):
+            self.data = self.model.objects(match_date__lte=(dt.now() - timedelta(minutes=115)))
+
+    def run(self):
+        print('Running {} on PID {}'.format(self.name, self.pid))
+        self.data_provider = self.EndedDataProvider(self.data_delay, self.model, self.name)
+        self.data_provider.start()
+        self.data_provider.update()
+        while True:
+            print(self.name)
+            for item in self.data_provider.data:
+                # TODO check score
+                # TODO move to finished
+                # TODO remove from active
+                pass
+            print('Jest {} meczy'.format(len(self.data_provider.data)))
+            sleep(self.worker_delay)
+
+
+class NewWorker(Worker):
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -129,13 +152,15 @@ class SearchWorker(Worker):
 
 if __name__ == '__main__':
     today_worker = TodayWorker(data_delay=15*60, worker_delay=10*60, model=Match, name='Today Worker')
-    current_worker = CurrentWorker(data_delay=15, worker_delay=10, model=Match, name='Current Worker')
-    week_worker = WeekWorker(data_delay=15*60, worker_delay=60*30, model=Match, name='Week Worker')
-    search_worker = SearchWorker(worker_delay=60*60, model=Match, name='Search Worker')
+    current_worker = CurrentWorker(data_delay=60, worker_delay=2*60, model=Match, name='Current Worker')
+    week_worker = WeekWorker(data_delay=15*60, worker_delay=30*60, model=Match, name='Week Worker')
+    new_worker = NewWorker(worker_delay=60*60, model=Match, name='New Worker')
+    ended_worker = EndedWorker(worker_delay=30*60, model=Match, name='Ended Worker')
     today_worker.start()
     current_worker.start()
     week_worker.start()
-    search_worker.start()
+    new_worker.start()
+    ended_worker.start()
 
 
 
