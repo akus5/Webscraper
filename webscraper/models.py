@@ -116,6 +116,7 @@ class BaseMatch(Document):
     league = StringField(max_length=128, required=False)
     country = StringField(max_length=128, required=True)
     match_date = DateTimeField(required=True)
+    end_date = DateTimeField(required=True)
     bets = EmbeddedDocumentListField(Bets)
 
     link = URLField()
