@@ -18,6 +18,9 @@ class OneXTwo(EmbeddedDocument):
     full_time = ListField(EmbeddedDocumentField(Bet1X2))
     first_half = ListField(EmbeddedDocumentField(Bet1X2))
     secound_half = ListField(EmbeddedDocumentField(Bet1X2))
+    full_time_avg = FloatField()
+    first_half_avg = FloatField()
+    secound_half_avg = FloatField()
 
 
 class BetAH(EmbeddedDocument):
@@ -57,6 +60,9 @@ class DrawNoBet(EmbeddedDocument):
     full_time = ListField(EmbeddedDocumentField(BetDNB))
     first_half = ListField(EmbeddedDocumentField(BetDNB))
     secound_half = ListField(EmbeddedDocumentField(BetDNB))
+    full_time_avg = FloatField()
+    first_half_avg = FloatField()
+    secound_half_avg = FloatField()
 
 
 class BetEH(EmbeddedDocument):
@@ -85,6 +91,9 @@ class DoubleChance(EmbeddedDocument):
     full_time = ListField(EmbeddedDocumentField(BetDC))
     first_half = ListField(EmbeddedDocumentField(BetDC))
     secound_half = ListField(EmbeddedDocumentField(BetDC))
+    full_time_avg = FloatField()
+    first_half_avg = FloatField()
+    secound_half_avg = FloatField()
 
 
 class BetCS(EmbeddedDocument):
@@ -99,14 +108,15 @@ class CorrectScore(EmbeddedDocument):
 
 
 class Bets(EmbeddedDocument):
-    one_x_two = ListField(EmbeddedDocumentField(OneXTwo))
-    asian_handicap = ListField(EmbeddedDocumentField(AsianHandicap))
-    over_under = ListField(EmbeddedDocumentField(OverUnder))
-    draw_no_bet = ListField(EmbeddedDocumentField(DrawNoBet))
-    european_handicap = ListField(EmbeddedDocumentField(EuropeanHandicap))
-    double_chance = ListField(EmbeddedDocumentField(DoubleChance))
-    correct_score = ListField(EmbeddedDocumentField(CorrectScore))
+    one_x_two = EmbeddedDocumentField(OneXTwo)
+    asian_handicap = EmbeddedDocumentField(AsianHandicap)
+    over_under = EmbeddedDocumentField(OverUnder)
+    draw_no_bet = EmbeddedDocumentField(DrawNoBet)
+    european_handicap = EmbeddedDocumentField(EuropeanHandicap)
+    double_chance = EmbeddedDocumentField(DoubleChance)
+    correct_score = EmbeddedDocumentField(CorrectScore)
     bets_date = DateTimeField(default=datetime.datetime.now())
+    time_to_end_match = DateTimeField()
 
 
 class BaseMatch(Document):
