@@ -37,12 +37,24 @@ bets = {
         'minor_fields': ['bookmaker', '_1X', '_12', '_X2', 'payout'],
         'bets_field': 'double_chance',
     },
-    # 'AH': {
-    #     'major_model': AsianHandicap,
-    #     'minor_model': BetAH,
-    #     'minor_fields': ['handicap', '_1', '_1', 'payout'],
-    #     'bets_field': 'asian_handicap',
-    # }
+    'AH': {
+        'major_model': AsianHandicap,
+        'minor_model': BetAH,
+        'minor_fields': ['handicap', '_1', '_2', 'payout'],
+        'bets_field': 'asian_handicap',
+    },
+    'O/U': {
+        'major_model': OverUnder,
+        'minor_model': BetOU,
+        'minor_fields': ['handicap', 'over', 'under', 'payout'],
+        'bets_field': 'over_under',
+    },
+    'EH': {
+        'major_model': EuropeanHandicap,
+        'minor_model': BetEH,
+        'minor_fields': ['handicap', '_1', '_X', '_2', 'payout'],
+        'bets_field': 'european_handicap',
+    },
 }
 
 
@@ -104,7 +116,15 @@ class MatchPageScraper:
             for bet in link['time_types']:
                 bet.click()
                 time.sleep(1)
-                data = self.get_bets_data()
+                if link['bet_name'] == 'AH':
+                    data = self.get_asian_handicap_bets_data()
+                elif link['bet_name'] == 'O/U':
+                    data = self.get_over_under_bets_data()
+                elif link['bet_name'] == 'EH':
+                    data = self.get_european_handicap_bets_data()
+                else:
+                    data = self.get_bets_data()
+                    pass
                 data[:] = [item for item in data if len(item) == len(bet_config['minor_fields'])]
                 time_type = bet.text
                 print('typ={}, czas={}, bety={}'.format(link['bet_name'], time_type, data))
@@ -118,7 +138,7 @@ class MatchPageScraper:
                 for i in range(len(data)):
                     minor_obj = bet_config['minor_model']()
                     for j, field in enumerate(bet_config['minor_fields']):
-                        if field not in ['bookmaker']:
+                        if field not in ['bookmaker', 'handicap']:
                             setattr(minor_obj, field, float(data[i][j]))
                         else:
                             setattr(minor_obj, field, data[i][j])
@@ -126,6 +146,64 @@ class MatchPageScraper:
             if not skipped:
                 setattr(bets_obj, bet_config['bets_field'], major_obj)
         return bets_obj
+
+    def get_asian_handicap_bets_data(self):
+        page_source = self.get_source_code()
+        data = []
+        odds_data_table = page_source.find('div', {'id': 'odds-data-table'})
+        table_header_light = odds_data_table.select('div[class^=table-header-light]')
+        for tag in table_header_light:
+            text = tag.text.split('(')
+            if text[1].startswith('0'):
+                continue
+            data_text = text[0].split()
+            handicap = ' '.join(data_text[:3])
+            bet_values = data_text[3].split('%')
+            payout = bet_values[0]
+            values = bet_values[1].split('.')
+            _1 = ''.join((values[0], '.', values[1][:2]))
+            _2 = ''.join((values[1][2:], '.', values[2]))
+            data.append([handicap, _1, _2, payout])
+        return data
+
+    def get_european_handicap_bets_data(self):
+        page_source = self.get_source_code()
+        data = []
+        odds_data_table = page_source.find('div', {'id': 'odds-data-table'})
+        table_header_light = odds_data_table.select('div[class^=table-header-light]')
+        for tag in table_header_light:
+            text = tag.text.split('(')
+            if text[1].startswith('0'):
+                continue
+            data_text = text[0].split()
+            handicap = ' '.join(data_text[:3])
+            bet_values = data_text[3].split('%')
+            payout = bet_values[0]
+            values = bet_values[1].split('.')
+            _1 = ''.join((values[0], '.', values[1][:2]))
+            _X = ''.join((values[1][2:], '.', values[2][:2]))
+            _2 = ''.join((values[2][2:], '.', values[3]))
+            data.append([handicap, _1, _X, _2, payout])
+        return data
+
+    def get_over_under_bets_data(self):
+        page_source = self.get_source_code()
+        data = []
+        odds_data_table = page_source.find('div', {'id': 'odds-data-table'})
+        table_header_light = odds_data_table.select('div[class^=table-header-light]')
+        for tag in table_header_light:
+            text = tag.text.split('(')
+            if text[1].startswith('0'):
+                continue
+            data_text = text[0].split()
+            handicap = ' '.join(data_text[:2])
+            bet_values = data_text[2].split('%')
+            payout = bet_values[0]
+            values = bet_values[1].split('.')
+            over = ''.join((values[0], '.', values[1][:2]))
+            under = ''.join((values[1][2:], '.', values[2]))
+            data.append([handicap, over, under, payout])
+        return data
 
     def get_bets_data(self):
         page_source = self.get_source_code()
