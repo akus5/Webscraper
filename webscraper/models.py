@@ -1,9 +1,10 @@
 import datetime
+from pytz import timezone as tz
 
 from mongoengine import *
 
 
-connect('scrapper', host='mongodb://localhost/scrapper')
+connect('scraper', host='mongodb://localhost/scraper')
 
 
 class Bet1X2(EmbeddedDocument):
@@ -115,7 +116,7 @@ class Bets(EmbeddedDocument):
     european_handicap = EmbeddedDocumentField(EuropeanHandicap)
     double_chance = EmbeddedDocumentField(DoubleChance)
     correct_score = EmbeddedDocumentField(CorrectScore)
-    bets_date = DateTimeField(default=datetime.datetime.now())
+    bets_date = DateTimeField(default=datetime.datetime.now(tz('UTC')))
     time_to_end_match = DateTimeField()
 
 
@@ -124,13 +125,12 @@ class BaseMatch(Document):
     team_home = StringField(max_length=128, required=True)
     team_away = StringField(max_length=128, required=True)
     league = StringField(max_length=128, required=False)
-    country = StringField(max_length=128, required=True)
+    country = StringField(max_length=128, required=False)
     match_date = DateTimeField(required=True)
     end_date = DateTimeField(required=True)
     bets = EmbeddedDocumentListField(Bets)
-
     link = URLField()
-    create_date = DateTimeField(default=datetime.datetime.now())
+    create_date = DateTimeField(default=datetime.datetime.now(tz('UTC')))
 
     meta = {
         'abstract': True,
@@ -138,7 +138,7 @@ class BaseMatch(Document):
 
 
 class FinishedMatch(BaseMatch):
-    score = StringField(max_length=5, required=True)
+    score = StringField(max_length=32, required=True)
 
     def create_from_match(self, match, score):
         self.title = match.title
@@ -147,6 +147,7 @@ class FinishedMatch(BaseMatch):
         self.league = match.league
         self.country = match.country
         self.match_date = match.match_date
+        self.end_date = match.end_date
         self.bets = match.bets
         self.link = match.link
         self.score = score
@@ -159,16 +160,26 @@ class Match(BaseMatch):
     meta = {'collection': 'match'}
 
 
+class WorkerInfo(Document):
+    name = StringField(max_length=32, required=True)
+    last_run = DateTimeField()
+
+
+# info = WorkerInfo(name='NewWorker', last_run=datetime.datetime.now())
+# info.save()
+
 # o = FinishedMatch.objects.get(country='Poland', team_home='Test')
 # print(o.title)
-# obj = Match(match_date=datetime.datetime.now() + datetime.timedelta(hours=4), team_home='Test', title='Druzyna3 vs Druzyna4', country='Poland', team_away='Druzyna4')
+
+# obj = Match(match_date=datetime.datetime.now() + datetime.timedelta(hours=4), end_date=datetime.datetime.now() + datetime.timedelta(hours=6), team_home='Test', title='Druzyna3 vs Druzyna4', country='Poland', team_away='Druzyna4')
 # b = Bet1X2(bookmaker='Test', _1=2.5, _X=2.5, _2=2.6, payout=96.56)
 # o = OneXTwo()
 # o.full_time.append(b)
 # bet = Bets()
-# bet.one_x_two.append(o)
+# bet.one_x_two = o
 #
 # obj.bets.append(bet)
 # obj.save()
+
 # t = FinishedMatch().create_from_match(obj, '2:5')
 # t.save()

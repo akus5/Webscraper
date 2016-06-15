@@ -1,9 +1,12 @@
 from multiprocessing import Process
 from time import sleep
 from datetime import datetime as dt, timedelta
+from pytz import timezone as tz
 from threading import Thread
 
-from webscraper.models import Match
+
+from webscraper.models import Match, FinishedMatch, WorkerInfo
+from webscraper.scrapers import NewMatchScraper, MatchPageScraper
 
 
 class Worker(Process):
@@ -17,17 +20,7 @@ class Worker(Process):
         self.data_provider = None
 
     def run(self):
-        print('Running {} on PID {}'.format(self.name, self.pid))
-        self.data_provider = DataProvider(self.data_delay, self.model, self.name)
-        self.data_provider.start()
-        self.data_provider.update()
-        while True:
-            print(self.name)
-            for item in self.data_provider.data:
-                # TODO update bids
-                pass
-            print('Jest {} meczy'.format(len(self.data_provider.data)))
-            sleep(self.worker_delay)
+        pass
 
 
 class DataProvider(Thread):
@@ -57,7 +50,8 @@ class TodayWorker(Worker):
     class TodayDataProvider(DataProvider):
 
         def update(self):
-            self.data = self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(match_date__gte=dt.now(tz('UTC')), match_date__lte=dt.now(tz('UTC')) + timedelta(days=1))
+            print('Znaleziono {} dzisiajszych meczy'.format(len(self.data)))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -65,11 +59,14 @@ class TodayWorker(Worker):
         self.data_provider.start()
         self.data_provider.update()
         while True:
-            print(self.name)
-            for item in self.data_provider.data:
-                # TODO update bids
-                pass
-            print('Jest {} meczy'.format(len(self.data_provider.data)))
+            # print(self.name)
+            for match in self.data_provider.data:
+                bets = None
+                with MatchPageScraper(match.link) as scraper:
+                    bets = scraper.get_bets()
+                match.bets.append(bets)
+                match.save()
+                print('Zaktualizowano dzisiejszy mecz {}'.format(match.title))
             sleep(self.worker_delay)
 
 
@@ -78,7 +75,8 @@ class CurrentWorker(Worker):
     class CurrentDataProvider(DataProvider):
 
         def update(self):
-            self.data = self.model.objects(match_date__gte=dt.now(), match_date__lte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(end_date__gte=dt.now(tz('UTC')), end_date__lte=dt.now(tz('UTC')) + timedelta(minutes=110))
+            print('Znaleziono {} trwających meczy'.format(len(self.data)))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -86,11 +84,14 @@ class CurrentWorker(Worker):
         self.data_provider.start()
         self.data_provider.update()
         while True:
-            print(self.name)
-            for item in self.data_provider.data:
-                # TODO update bids
-                pass
-            print('Jest {} meczy'.format(len(self.data_provider.data)))
+            # print(self.name)
+            for match in self.data_provider.data:
+                bets = None
+                with MatchPageScraper(match.link) as scraper:
+                    bets = scraper.get_bets()
+                match.bets.append(bets)
+                match.save()
+                print('Zaktualizowano trwający mecz {}'.format(match.title))
             sleep(self.worker_delay)
 
 
@@ -99,7 +100,8 @@ class WeekWorker(Worker):
     class WeekDataProvider(DataProvider):
 
         def update(self):
-            self.data = self.model.objects(match_date__gte=dt.now() + timedelta(days=1))
+            self.data = self.model.objects(match_date__gte=dt.now(tz('UTC')) + timedelta(days=1))
+            print('Znaleziono {} meczy w tym tygodniu'.format(len(self.data)))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -107,11 +109,14 @@ class WeekWorker(Worker):
         self.data_provider.start()
         self.data_provider.update()
         while True:
-            print(self.name)
-            for item in self.data_provider.data:
-                # TODO update bids
-                pass
-            print('Jest {} meczy'.format(len(self.data_provider.data)))
+            # print(self.name)
+            for match in self.data_provider.data:
+                bets = None
+                with MatchPageScraper(match.link) as scraper:
+                    bets = scraper.get_bets()
+                match.bets.append(bets)
+                match.save()
+                print('Zaktualizowano mecz {}'.format(match.title))
             sleep(self.worker_delay)
 
 
@@ -120,7 +125,8 @@ class EndedWorker(Worker):
     class EndedDataProvider(DataProvider):
 
         def update(self):
-            self.data = self.model.objects(match_date__lte=(dt.now() - timedelta(minutes=115)))
+            self.data = self.model.objects(match_date__lte=(dt.now(tz('UTC')) - timedelta(minutes=115)))
+            print('Znaleziono {} zakończonych meczy'.format(len(self.data)))
 
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
@@ -128,13 +134,15 @@ class EndedWorker(Worker):
         self.data_provider.start()
         self.data_provider.update()
         while True:
-            print(self.name)
-            for item in self.data_provider.data:
-                # TODO check score
-                # TODO move to finished
-                # TODO remove from active
-                pass
-            print('Jest {} meczy'.format(len(self.data_provider.data)))
+            # print(self.name)
+            for match in self.data_provider.data:
+                score = None
+                with MatchPageScraper(match.link) as scraper:
+                    score = scraper.get_score()
+                finished = FinishedMatch().create_from_match(match, score)
+                finished.save()
+                print('Przeniesiono mecz {} do zakończonych.'.format(match.title))
+                match.delete()
             sleep(self.worker_delay)
 
 
@@ -143,10 +151,23 @@ class NewWorker(Worker):
     def run(self):
         print('Running {} on PID {}'.format(self.name, self.pid))
         while True:
-            print(self.name)
-            data = self.model.objects.all()
-            # TODO find new matches
-            print('Jest {} meczy'.format(len(data)))
+            # print(self.name)
+            worker_info = WorkerInfo.objects.get(name='NewWorker')
+            if worker_info.last_run < dt.now() - timedelta(hours=24):
+                with NewMatchScraper() as scraper:
+                    new_matches_links = scraper.get_links()
+                print('Znaleziono {} nowych meczy'.format(len(new_matches_links)))
+                for link in new_matches_links:
+                    new_match = Match()
+                    with MatchPageScraper(link) as scraper:
+                        match_info = scraper.get_match_info()
+                        for key, value in match_info.items():
+                            setattr(new_match, key, value)
+                        new_match.bets.append(scraper.get_bets())
+                    new_match.save()
+                    print('Dodano nowy mecz: {}'.format(new_match.title))
+                worker_info.last_run = dt.now(tz('UTC'))
+                worker_info.save()
             sleep(self.worker_delay)
 
 
