@@ -61,7 +61,7 @@ bets = {
 class MatchPageScraper:
 
     def __init__(self, url):
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Opera()
         self.url = url
         self.driver.get(url)
         self.bets = {}
@@ -248,7 +248,7 @@ class MatchPageScraper:
 class NewMatchScraper:
 
     def __init__(self):
-        self.driver = webdriver.Chrome()
+        self.driver = webdriver.Opera()
         self.base_url = 'http://www.oddsportal.com/matches/soccer/'
         self.url = self.get_page_url()
 
